@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="description" content="Application professionnelle de devis pour l'installation de systèmes CCTV">
+  <title>CCTV Quote Pro</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    /* Inline critical CSS overrides */
+    .admin-panel-section { display: none; }
+    .admin-mode .admin-panel-section { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════════════════ -->
+<header id="app-header">
+  <div class="header-logo">📷</div>
+  <div class="header-title">
+    CCTV Quote Pro
+    <span>Devis professionnel</span>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="dark-btn" onclick="toggleDark()" title="Mode sombre" aria-label="Toggle dark mode">🌙</button>
+    <button class="icon-btn" id="admin-btn" onclick="openAdminModal()" title="Mode admin" aria-label="Mode administrateur">🔐</button>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB BAR
+══════════════════════════════════════════════════════════════ -->
+<nav id="tab-bar" role="tablist" aria-label="Navigation principale">
+  <button class="tab-btn active" data-tab="catalog" onclick="switchTab('catalog')" role="tab" aria-selected="true">📦 Catalogue</button>
+  <button class="tab-btn" data-tab="client" onclick="switchTab('client')" role="tab">👤 Client</button>
+  <button class="tab-btn" data-tab="company" onclick="switchTab('company')" role="tab">🏢 Société</button>
+  <button class="tab-btn" data-tab="quote" onclick="switchTab('quote')" role="tab">📄 Devis</button>
+  <button class="tab-btn" data-tab="admin" onclick="switchTab('admin')" role="tab">📊 Stats</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════════════════════════ -->
+<main id="main">
+
+  <!-- ─────────── TAB: CATALOG ─────────── -->
+  <div id="tab-catalog" class="tab-panel active">
+    <div class="search-wrapper">
+      <div class="search-box">
+        <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="search" placeholder="Rechercher un produit..." oninput="onSearch(this.value)" aria-label="Rechercher un produit">
+      </div>
+    </div>
+    <div id="catalog-list" role="list" aria-label="Catalogue produits"></div>
+  </div>
+
+  <!-- ─────────── TAB: CLIENT ─────────── -->
+  <div id="tab-client" class="tab-panel">
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">👤 Informations Client</div>
+      <div class="form-group">
+        <label class="form-label" for="client-name">Nom du client</label>
+        <input class="form-input" id="client-name" type="text" placeholder="Nom complet ou société" autocomplete="name">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="client-phone">Téléphone</label>
+          <input class="form-input" id="client-phone" type="tel" placeholder="+212 6 00 00 00 00" autocomplete="tel">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="client-date">Date</label>
+          <input class="form-input" id="client-date" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="client-address">Adresse</label>
+        <input class="form-input" id="client-address" type="text" placeholder="Adresse complète" autocomplete="street-address">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="client-ref">Référence projet</label>
+        <input class="form-input" id="client-ref" type="text" placeholder="Ex: VILLA-HASSAN-AGDAL">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 Notes</div>
+      <textarea class="form-textarea" id="quote-notes" placeholder="Notes, conditions de paiement, délais, garantie..."></textarea>
+    </div>
+
+    <div class="card" style="background:var(--blue-light);border-color:var(--blue)">
+      <div style="display:flex;gap:10px;align-items:center">
+        <div style="font-size:24px">💡</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--blue)">N° du devis actuel</div>
+          <div id="current-quote-num" style="font-size:20px;font-weight:800;color:var(--blue)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────── TAB: COMPANY ─────────── -->
+  <div id="tab-company" class="tab-panel">
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">🏢 Informations Société</div>
+      <div class="form-group">
+        <label class="form-label" for="co-name">Nom de la société</label>
+        <input class="form-input" id="co-name" type="text" placeholder="Votre société" autocomplete="organization">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="co-address">Adresse</label>
+        <input class="form-input" id="co-address" type="text" placeholder="Adresse complète">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="co-phone">Téléphone</label>
+          <input class="form-input" id="co-phone" type="tel" placeholder="+212 6 00 00 00 00">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="co-email">Email</label>
+          <input class="form-input" id="co-email" type="email" placeholder="contact@societe.ma">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🖼️ Logo Société</div>
+      <div class="logo-upload-area" onclick="triggerLogoUpload()" id="logo-preview-area" role="button" tabindex="0" aria-label="Télécharger un logo">
+        <div class="logo-placeholder"><span>🏢</span>Cliquer pour ajouter un logo</div>
+      </div>
+      <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="onLogoUpload(event)">
+      <button class="btn btn-outline w-full" onclick="removeLogo()" style="justify-content:center">🗑️ Supprimer le logo</button>
+    </div>
+
+    <div class="card" style="background:var(--green-light);border-color:var(--green)">
+      <div style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:6px">✅ Données sauvegardées automatiquement</div>
+      <div style="font-size:12px;color:var(--text2)">Les informations société sont mémorisées dans votre navigateur.</div>
+    </div>
+  </div>
+
+  <!-- ─────────── TAB: QUOTE ─────────── -->
+  <div id="tab-quote" class="tab-panel">
+    <div style="padding:16px;display:flex;gap:10px;flex-wrap:wrap" class="no-print">
+      <button class="btn btn-primary" onclick="exportPDF()" style="flex:1;min-width:120px;justify-content:center">📥 Export PDF</button>
+      <button class="btn btn-outline" onclick="printQuote()" style="flex:1;min-width:120px;justify-content:center">🖨️ Imprimer</button>
+      <button class="btn btn-outline" onclick="duplicateQuote()" style="justify-content:center;min-width:120px">📋 Dupliquer</button>
+    </div>
+
+    <div id="quote-preview" style="margin-bottom:16px">
+      <div id="quote-content"></div>
+    </div>
+  </div>
+
+  <!-- ─────────── TAB: STATS ─────────── -->
+  <div id="tab-admin" class="tab-panel">
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">📊 Récapitulatif devis</div>
+      <div class="admin-stat-grid">
+        <div class="admin-stat">
+          <div class="admin-stat-label">Total Vente</div>
+          <div class="admin-stat-value blue" id="adm-vente-pub">—</div>
+        </div>
+        <div class="admin-stat">
+          <div class="admin-stat-label">Articles</div>
+          <div class="admin-stat-value" id="adm-count">0</div>
+        </div>
+      </div>
+
+      <!-- Admin-only stats, shown only in admin mode -->
+      <div class="admin-panel-section">
+        <div style="padding:10px;background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius-sm);margin-bottom:12px;font-size:12px;color:var(--text);display:flex;gap:8px;align-items:center">
+          <span>🔓</span><span>Mode administrateur actif</span>
+        </div>
+        <div class="admin-stat-grid">
+          <div class="admin-stat">
+            <div class="admin-stat-label">Total Achat</div>
+            <div class="admin-stat-value red" id="adm-achat">—</div>
+          </div>
+          <div class="admin-stat">
+            <div class="admin-stat-label">Total Vente</div>
+            <div class="admin-stat-value blue" id="adm-vente">—</div>
+          </div>
+          <div class="admin-stat">
+            <div class="admin-stat-label">Bénéfice Net</div>
+            <div class="admin-stat-value green" id="adm-profit">—</div>
+          </div>
+          <div class="admin-stat">
+            <div class="admin-stat-label">Marge %</div>
+            <div class="admin-stat-value green" id="adm-margin">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Always visible: locked prompt -->
+      <div id="admin-locked-msg" style="text-align:center;padding:20px;color:var(--text3);font-size:13px">
+        <div style="font-size:32px;margin-bottom:8px">🔒</div>
+        <div>Activez le mode admin pour voir les données confidentielles</div>
+        <button class="btn btn-primary" onclick="openAdminModal()" style="margin-top:12px">Accès Admin</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚡ Actions rapides</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-primary w-full" onclick="switchTab('quote');exportPDF()" style="justify-content:center">📥 Exporter en PDF</button>
+        <button class="btn btn-outline w-full" onclick="switchTab('quote');printQuote()" style="justify-content:center">🖨️ Imprimer le devis</button>
+        <button class="btn btn-outline w-full" onclick="duplicateQuote()" style="justify-content:center">📋 Dupliquer le devis</button>
+        <button class="btn btn-danger w-full" onclick="resetQuote()" style="justify-content:center">♻️ Réinitialiser le devis</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">ℹ️ À propos</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7">
+        <div>📱 <strong>CCTV Quote Pro</strong> v1.0</div>
+        <div>🌐 Application hors ligne (PWA)</div>
+        <div>💾 Données stockées localement</div>
+        <div style="margin-top:8px;padding:8px;background:var(--blue-light);border-radius:8px;color:var(--blue);font-size:11px">
+          Installez l'application sur votre téléphone pour un accès rapide sans navigateur.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════════════
+     STICKY SUMMARY BAR
+══════════════════════════════════════════════════════════════ -->
+<div id="summary-bar" class="no-print" role="region" aria-label="Résumé du devis">
+  <div class="summary-inner">
+    <div class="summary-stats">
+      <div class="summary-items"><strong id="sum-items">0 article</strong></div>
+      <div class="summary-total" id="sum-total">0 DH</div>
+      <div class="admin-total" id="sum-admin"></div>
+    </div>
+    <div class="summary-btns">
+      <button class="btn btn-primary" onclick="switchTab('quote')" aria-label="Voir le devis">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Voir devis
+      </button>
+      <button class="btn btn-outline" onclick="exportPDF()" aria-label="Télécharger PDF">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FAB BUTTONS
+══════════════════════════════════════════════════════════════ -->
+<div class="fab-group no-print">
+  <button class="fab red" onclick="resetQuote()" title="Réinitialiser" aria-label="Réinitialiser le devis">♻️</button>
+  <button class="fab amber" onclick="switchTab('client')" title="Informations client" aria-label="Infos client">👤</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PWA INSTALL BANNER
+══════════════════════════════════════════════════════════════ -->
+<div id="pwa-banner" role="alert" class="no-print">
+  <div class="pwa-text">
+    <strong>📲 Installer l'application</strong>
+    Accès rapide depuis votre écran d'accueil
+  </div>
+  <button class="btn btn-outline" onclick="installPWA()" style="color:#fff;border-color:rgba(255,255,255,.4);font-size:12px;padding:8px 12px">Installer</button>
+  <button class="icon-btn" onclick="document.getElementById('pwa-banner').classList.remove('visible')" style="color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">✕</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TOAST
+══════════════════════════════════════════════════════════════ -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- ══════════════════════════════════════════════════════════
+     ADMIN MODAL
+══════════════════════════════════════════════════════════════ -->
+<div id="admin-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+  <div class="modal-box">
+    <span class="modal-emoji">🔐</span>
+    <h2 class="modal-title" id="admin-modal-title" style="text-align:center">Accès Administrateur</h2>
+    <p style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:16px">Entrez le code admin pour accéder aux données confidentielles</p>
+    <div class="form-group">
+      <label class="form-label" for="admin-pwd">Code d'accès</label>
+      <input class="form-input" id="admin-pwd" type="password" placeholder="Entrez le code admin" autocomplete="off">
+      <div id="admin-pwd-error" style="display:none;color:var(--red);font-size:12px;margin-top:6px">❌ Code incorrect</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-outline w-full" onclick="closeModal('admin-modal')" style="justify-content:center">Annuler</button>
+      <button class="btn btn-primary w-full" onclick="checkAdminCode()" style="justify-content:center">✓ Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="./app.js"></script>
+<script>
+  // Post-render updates that need DOM ready
+  document.addEventListener('DOMContentLoaded', () => {
+    // Set today's date as default
+    const dateEl = document.getElementById('client-date');
+    if (dateEl && !App.client.date) {
+      dateEl.value = new Date().toISOString().split('T')[0];
+      App.client.date = dateEl.value;
+    }
+
+    // Update quote number display
+    function updateQuoteNumDisplay() {
+      const el = document.getElementById('current-quote-num');
+      if (el && App.quoteNumber) el.textContent = App.quoteNumber;
+    }
+    const orig = window.renderApp;
+    window.renderApp = function() { orig(); updateQuoteNumDisplay(); };
+    setTimeout(updateQuoteNumDisplay, 50);
+
+    // Stats tab live update
+    function updatePublicStats() {
+      if (typeof App === 'undefined' || !App.data) return;
+      const t = calcTotals();
+      const el = id => document.getElementById(id);
+      if (el('adm-vente-pub')) el('adm-vente-pub').textContent = fmtMoney(t.totalVente) + ' DH';
+      if (el('adm-count')) el('adm-count').textContent = t.count;
+      // toggle admin locked message
+      const locked = el('admin-locked-msg');
+      if (locked) locked.style.display = App.adminMode ? 'none' : 'block';
+    }
+    // Patch summary bar to also update stats
+    const origSummary = window.updateSummaryBar;
+    window.updateSummaryBar = function() { origSummary(); updatePublicStats(); };
+    updatePublicStats();
+  });
+</script>
+</body>
+</html>
